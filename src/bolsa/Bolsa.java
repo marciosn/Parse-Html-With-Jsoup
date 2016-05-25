@@ -17,19 +17,17 @@ public class Bolsa {
 	
 	public static void main(String[] args) {
 		
-		getPessoasCidade("ceara", "quixada");
+		getPessoasCidade("ceara", "quixada", 499, 4000);
 	}
 	
-	public static void getPessoasCidade(String estado ,String cidade){
+	public static void getPessoasCidade(String estado,String cidade, int tamanhoLista, int timeout){
 		List<CearaCidades> cidades = new ArrayList<>();
 		Document doc;
-		try {			
-			int tamanho = 84;
-			
-			for (int k = 1; k <= tamanho; k++) {
+		try {					
+			for (int k = 1; k <= tamanhoLista; k++) {
 				String urlNew = "http://bolsa-familia.com/pessoas/"+estado.toLowerCase()+"/"+ cidade +"/"+ k +"/1/1";
 				System.out.println("### "+urlNew);
-				doc = Jsoup.connect(urlNew).timeout(5000).get();
+				doc = Jsoup.connect(urlNew).timeout(timeout).get();
 				Element t = doc.select("table[class=table]").first();
 				List<Element> trList = t.select("tr");
 				
@@ -51,12 +49,12 @@ public class Bolsa {
 				}
 			}
 			
-			Gson gson = new Gson();
-			System.out.println(gson.toJson(cidades));
+			//Gson gson = new Gson();
+			//System.out.println(gson.toJson(cidades));
 			ObjectMapper mapper = new ObjectMapper();  
-			System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(cidades));
+			//System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(cidades));
 			
-			createJSON(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(cidades),"ceara","abaiara");
+			createJSON(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(cidades),estado,cidade);
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -66,6 +64,11 @@ public class Bolsa {
 	public static void createJSON(String json, String estado, String cidade){
 		
 		 	File file = new File(estado + "_" + cidade+ ".json");
+		 	
+		 	if (file.exists()) {
+		        file.delete();     
+		     }
+		 	
 		    FileWriter writer = null;
 		    try {
 		        writer = new FileWriter(file);
