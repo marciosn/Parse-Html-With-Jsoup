@@ -91,5 +91,46 @@ public class Bolsa {
 			e.printStackTrace();
 		}
 	}
+	
+	public static void getPessoasCidade(String estado){
+		List<CearaCidades> cidades = new ArrayList<>();
+		Document doc;
+		try {			
+			int tamanho = 84;
+			
+			for (int k = 1; k <= tamanho; k++) {
+				String urlNew = "http://bolsa-familia.com/pessoas/"+estado.toLowerCase()+"/abaiara/"+ k +"/1/1";
+				System.out.println("### "+urlNew);
+				doc = Jsoup.connect(urlNew).timeout(5000).get();
+				Element t = doc.select("table[class=table]").first();
+				List<Element> trList = t.select("tr");
+				
+				for(int i = 0; i < trList.size(); i++){
+					CearaCidades cearaCidades;
+					List<Element> rows = trList.get(i).select("td");
+					if (trList.get(i).text().contains("Ver Pessoas") || trList.get(i).text().contains("Ver Pagamentos")) {
+						continue;
+					} else {
+						if ( rows.size() == 3) {
+							cearaCidades = new CearaCidades();
+							cearaCidades.setNome(rows.get(0).text());
+							cearaCidades.setPagamentos(rows.get(1).text());
+							cearaCidades.setValor(rows.get(2).text()); 
+							cearaCidades.setUrlCidade(rows.get(0).select("a[href]").attr("href"));
+							cidades.add(cearaCidades);
+						}
+					}
+				}
+			}
+			
+			Gson gson = new Gson();
+			System.out.println(gson.toJson(cidades));
+			ObjectMapper mapper = new ObjectMapper();  
+			System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(cidades));
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
 }
