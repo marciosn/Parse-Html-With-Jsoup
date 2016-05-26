@@ -13,10 +13,20 @@ import org.jsoup.nodes.Element;
 
 public class Bolsa {
 	
+	private static int TIMEOUT = 3000;
+	
 	public static void main(String[] args) {		
 		try {
+			//getInfoPessoa("http://bolsa-familia.com/beneficiario/ceara/quixada/wanderlucia-de-freitas-pinheiro/16563344918");
 			
-			getPessoasCidade("ceara", "quixada", 499, 3000);
+			for (PessoaInfo pessoa : getInfoPessoa("http://bolsa-familia.com/beneficiario/ceara/quixada/wanderlucia-de-freitas-pinheiro/16563344918")) {
+				System.out.println(pessoa.getNome());
+				System.out.println(pessoa.getNIS());
+				System.out.println(pessoa.getMesRecebimento());
+				System.out.println(pessoa.getAnoRecebimento());
+				System.out.println(pessoa.getValorRecebido());
+			}
+			
 			//getJSONBolsaFamilia();
 			
 		} catch (Exception e) {
@@ -52,14 +62,14 @@ public class Bolsa {
 		int quantidadePaginas = 0;
 		try {
 			String urlToGetUl = "http://bolsa-familia.com/cidades/"+estado+"/1/1/1";
-			doc = Jsoup.connect(urlToGetUl).timeout(3000).get();
+			doc = Jsoup.connect(urlToGetUl).timeout(TIMEOUT).get();
 			Element ul = doc.select("ul[class=pagination]").first();
 			quantidadePaginas = getPaginas(ul);
 			
 			for (int i = 1; i <= pagina; i++) {
 				String url = "http://bolsa-familia.com/cidades/"+estado+"/"+i+"/1/1";
 				System.out.println("loading... "+url);
-				doc = Jsoup.connect(url).timeout(3000).get();
+				doc = Jsoup.connect(url).timeout(TIMEOUT).get();
 				Element tableCidades = doc.select("table[class=table]").first();
 				List<Element> trCidade = tableCidades.select("tr");
 				
@@ -77,7 +87,7 @@ public class Bolsa {
 							cidade.setUrlCidade(rows.get(0).select("a[href]").attr("href"));
 							String cidadeNome = rows.get(0).select("a[href]").attr("href")
 									.substring(rows.get(0).select("a[href]").attr("href").lastIndexOf("/") + 1);
-							pessoas = getPessoasCidade(estado, cidadeNome, quantidadePaginas, 3000);
+							pessoas = getPessoasCidade(estado, cidadeNome, quantidadePaginas, TIMEOUT);
 							cidade.setPessoas(pessoas);
 							cidades.add(cidade);
 						}
@@ -93,12 +103,13 @@ public class Bolsa {
 	
 		
 	public static List<Pessoa> getPessoasCidade(String estado, String cidade, int pagina, int timeout){
+		System.out.println("@Buscando pessoa em cidade: " + cidade);
 		List<Pessoa> pessoas = new ArrayList<>();
 		Document doc;
 		try {					
 			for (int k = 1; k <= pagina; k++) {
 				String urlNew = "http://bolsa-familia.com/pessoas/"+estado.toLowerCase()+"/"+ cidade +"/"+ k +"/1/1";
-				System.out.println("### "+urlNew);
+				System.out.println("@"+urlNew);
 				doc = Jsoup.connect(urlNew).timeout(timeout).get();
 				Element t = doc.select("table[class=table]").first();
 				List<Element> trList = t.select("tr");
@@ -115,6 +126,10 @@ public class Bolsa {
 							pessoa.setPagamentos(rows.get(1).text());
 							pessoa.setValor(rows.get(2).text()); 
 							pessoa.setUrlPessoa(rows.get(0).select("a[href]").attr("href"));
+							
+							List<PessoaInfo> pessoaInfos = getInfoPessoa(pessoa.getUrlPessoa());
+							pessoa.setPessoaInfos(pessoaInfos);
+							
 							pessoas.add(pessoa);
 						}
 					}
@@ -124,6 +139,44 @@ public class Bolsa {
 			e.printStackTrace();
 		}
 		return pessoas;
+	}
+	
+	public static List<PessoaInfo> getInfoPessoa(String urlPessoa){
+		System.out.println("@Buscando pessoa info: " + urlPessoa);
+		List<PessoaInfo> pessoaInfos = new ArrayList<>();
+		Document doc;
+		try {
+			doc = Jsoup.connect(urlPessoa).timeout(TIMEOUT).get();
+			Element t = doc.select("table[class=table]").first();
+			List<Element> trList = t.select("tr");
+			
+			for(int i = 0; i < trList.size(); i++){
+				List<Element> rows = trList.get(i).select("td");
+				
+				if ( rows.size() == 3) {
+					PessoaInfo pessoaInfo = new PessoaInfo();
+					
+					String nome = rows.get(0).text().substring(0, rows.get(0).text().lastIndexOf(" ") + 1);
+					String nis = rows.get(0).text().substring(rows.get(0).text().lastIndexOf(" ") + 1);
+					String mes = rows.get(1).text().substring(0, rows.get(1).text().lastIndexOf("/") + 1);
+					String ano = rows.get(1).text().substring(rows.get(1).text().lastIndexOf("/") + 1);
+					String valor = rows.get(2).text().substring(0, rows.get(2).text().lastIndexOf(" ") + 1);
+					pessoaInfo.setNome(nome.trim());
+					pessoaInfo.setNIS(nis.trim());
+					pessoaInfo.setMesRecebimento(mes.replace("/", "").trim());
+					pessoaInfo.setAnoRecebimento(ano.trim());
+					pessoaInfo.setValorRecebido(valor.trim());
+					
+					pessoaInfos.add(pessoaInfo);
+				}
+			}
+				
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return pessoaInfos;
 	}
 	
 	public static int getPaginas(Element ul){

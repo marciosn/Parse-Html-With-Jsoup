@@ -1,11 +1,14 @@
 package bolsa;
 
+import java.util.List;
+
 public class Pessoa {
 	
 	private String nome;
 	private String urlPessoa;
 	private String pagamentos;
 	private String valor;
+	List<PessoaInfo> pessoaInfos;
 	
 	public Pessoa(String nome, String urlPessoa, String pagamentos, String valor) {
 		this.nome = nome;
@@ -41,6 +44,13 @@ public class Pessoa {
 	public void setValor(String valor) {
 		this.valor = valor;
 	}
-	
-	
+
+	public List<PessoaInfo> getPessoaInfos() {
+		return pessoaInfos;
+	}
+
+	public void setPessoaInfos(List<PessoaInfo> pessoaInfos) {
+		this.pessoaInfos = pessoaInfos;
+	}
+
 }
