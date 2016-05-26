@@ -16,8 +16,8 @@ public class Bolsa {
 	public static void main(String[] args) {		
 		try {
 			
-			//getPessoasCidade("ceara", "quixada", 499, 3000);
-			getJSONBolsaFamilia();
+			getPessoasCidade("ceara", "quixada", 499, 3000);
+			//getJSONBolsaFamilia();
 			
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -46,6 +46,7 @@ public class Bolsa {
 	
 	public static List<Cidade> getCidadesEstado(String estado, int pagina){
 		List<Cidade> cidades = new ArrayList<>();
+		List<Pessoa> pessoas = new ArrayList<>();
 		Cidade cidade = null;
 		Document doc;
 		int quantidadePaginas = 0;
@@ -57,7 +58,7 @@ public class Bolsa {
 			
 			for (int i = 1; i <= pagina; i++) {
 				String url = "http://bolsa-familia.com/cidades/"+estado+"/"+i+"/1/1";
-				//System.out.println("loading... "+url);
+				System.out.println("loading... "+url);
 				doc = Jsoup.connect(url).timeout(3000).get();
 				Element tableCidades = doc.select("table[class=table]").first();
 				List<Element> trCidade = tableCidades.select("tr");
@@ -70,14 +71,14 @@ public class Bolsa {
 					} else {
 						if ( rows.size() == 3) {
 							cidade = new Cidade();
-							/*System.out.println("$$$$ "+rows.get(0).select("a[href]").attr("href")
-									.substring(rows.get(0).select("a[href]").attr("href").lastIndexOf("/") + 1));*/
 							cidade.setNome(rows.get(0).text());
 							cidade.setPagamentos(rows.get(1).text());
 							cidade.setValor(rows.get(2).text()); 
 							cidade.setUrlCidade(rows.get(0).select("a[href]").attr("href"));
-							/*System.out.println(rows.get(0).select("a[href]").attr("href")
-									.substring(rows.get(0).select("a[href]").attr("href").lastIndexOf("/") + 1));*/
+							String cidadeNome = rows.get(0).select("a[href]").attr("href")
+									.substring(rows.get(0).select("a[href]").attr("href").lastIndexOf("/") + 1);
+							pessoas = getPessoasCidade(estado, cidadeNome, quantidadePaginas, 3000);
+							cidade.setPessoas(pessoas);
 							cidades.add(cidade);
 						}
 					}
@@ -90,25 +91,9 @@ public class Bolsa {
 		return cidades;
 	}
 	
-	public static int getPaginas(Element ul){
-		int pagina = 1;
-		if (ul != null) {
-			List<Element> lis = ul.select("li");
-			if (lis != null) {
-				if (lis.size() > 1) {
-					lis.remove(lis.size() - 1);
-					pagina = Integer.valueOf(lis.get(lis.size() - 1).text());
-					System.out.println(pagina);
-				} else {
-					return 1;
-				}
-			}
-		}
-		return pagina;
-	}
-	
-	public static void getPessoasCidade(String estado, String cidade, int pagina, int timeout){
-		List<Cidade> cidades = new ArrayList<>();
+		
+	public static List<Pessoa> getPessoasCidade(String estado, String cidade, int pagina, int timeout){
+		List<Pessoa> pessoas = new ArrayList<>();
 		Document doc;
 		try {					
 			for (int k = 1; k <= pagina; k++) {
@@ -119,37 +104,46 @@ public class Bolsa {
 				List<Element> trList = t.select("tr");
 				
 				for(int i = 0; i < trList.size(); i++){
-					Cidade cearaCidades;
+					Pessoa pessoa;
 					List<Element> rows = trList.get(i).select("td");
 					if (trList.get(i).text().contains("Ver Pessoas") || trList.get(i).text().contains("Ver Pagamentos")) {
 						continue;
 					} else {
 						if ( rows.size() == 3) {
-							cearaCidades = new Cidade();
-							cearaCidades.setNome(rows.get(0).text());
-							cearaCidades.setPagamentos(rows.get(1).text());
-							cearaCidades.setValor(rows.get(2).text()); 
-							cearaCidades.setUrlCidade(rows.get(0).select("a[href]").attr("href"));
-							cidades.add(cearaCidades);
+							pessoa = new Pessoa();
+							pessoa.setNome(rows.get(0).text());
+							pessoa.setPagamentos(rows.get(1).text());
+							pessoa.setValor(rows.get(2).text()); 
+							pessoa.setUrlPessoa(rows.get(0).select("a[href]").attr("href"));
+							pessoas.add(pessoa);
 						}
 					}
 				}
 			}
-			
-			//Gson gson = new Gson();
-			//System.out.println(gson.toJson(cidades));
-			ObjectMapper mapper = new ObjectMapper();  
-			//System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(cidades));
-			
-			createJSON(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(cidades),estado,cidade);
-
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		return pessoas;
 	}
 	
+	public static int getPaginas(Element ul){
+		int pagina = 1;
+		if (ul != null) {
+			List<Element> lis = ul.select("li");
+			if (lis != null) {
+				if (lis.size() > 1) {
+					lis.remove(lis.size() - 1);
+					pagina = Integer.valueOf(lis.get(lis.size() - 1).text());
+				} else {
+					return 1;
+				}
+			}
+		}
+		return pagina;
+	}
+
+	
 	public static void createJSON(String json, String estado, String cidade){
-		
 		 	File file = new File(estado + "_" + cidade+ ".json");
 		 	
 		 	if (file.exists()) {
@@ -161,7 +155,7 @@ public class Bolsa {
 		        writer = new FileWriter(file);
 		        writer.write(json);
 		    } catch (IOException e) {
-		        e.printStackTrace(); // I'd rather declare method with throws IOException and omit this catch.
+		        e.printStackTrace();
 		    } finally {
 		        if (writer != null) try { writer.close(); } catch (IOException ignore) {}
 		    }

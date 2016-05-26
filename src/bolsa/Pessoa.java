@@ -1,17 +1,20 @@
 package bolsa;
 
-import java.util.List;
-
-public class Cidade {
+public class Pessoa {
 	
 	private String nome;
-	private String urlCidade;
+	private String urlPessoa;
 	private String pagamentos;
 	private String valor;
-	private List<Pessoa> pessoas;
 	
-	public Cidade(){
-		
+	public Pessoa(String nome, String urlPessoa, String pagamentos, String valor) {
+		this.nome = nome;
+		this.urlPessoa = urlPessoa;
+		this.pagamentos = pagamentos;
+		this.valor = valor;
+	}
+	
+	public Pessoa() {
 	}
 	
 	public String getNome() {
@@ -20,11 +23,11 @@ public class Cidade {
 	public void setNome(String nome) {
 		this.nome = nome;
 	}
-	public String getUrlCidade() {
-		return urlCidade;
+	public String getUrlPessoa() {
+		return urlPessoa;
 	}
-	public void setUrlCidade(String urlCidade) {
-		this.urlCidade = urlCidade;
+	public void setUrlPessoa(String urlPessoa) {
+		this.urlPessoa = urlPessoa;
 	}
 	public String getPagamentos() {
 		return pagamentos;
@@ -38,10 +41,6 @@ public class Cidade {
 	public void setValor(String valor) {
 		this.valor = valor;
 	}
-	public List<Pessoa> getPessoas() {
-		return pessoas;
-	}
-	public void setPessoas(List<Pessoa> pessoas) {
-		this.pessoas = pessoas;
-	}
+	
+	
 }
