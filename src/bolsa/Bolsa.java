@@ -15,19 +15,11 @@ public class Bolsa {
 	
 	private static int TIMEOUT = 3000;
 	
+	private static ObjectMapper mapper = new ObjectMapper();
+	
 	public static void main(String[] args) {		
-		try {
-			//getInfoPessoa("http://bolsa-familia.com/beneficiario/ceara/quixada/wanderlucia-de-freitas-pinheiro/16563344918");
-			
-			for (PessoaInfo pessoa : getInfoPessoa("http://bolsa-familia.com/beneficiario/ceara/quixada/wanderlucia-de-freitas-pinheiro/16563344918")) {
-				System.out.println(pessoa.getNome());
-				System.out.println(pessoa.getNIS());
-				System.out.println(pessoa.getMesRecebimento());
-				System.out.println(pessoa.getAnoRecebimento());
-				System.out.println(pessoa.getValorRecebido());
-			}
-			
-			//getJSONBolsaFamilia();
+		try {			
+			getJSONBolsaFamilia();
 			
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -43,16 +35,15 @@ public class Bolsa {
 			for (Estado estado : getEstados()) {
 				estadoVO = new EstadoVO(estado.getNome(), getCidadesEstado(estado.getNome(), estado.getQuantidadePaginas()));
 				estadoVOs.add(estadoVO);
+				
+				createJSON(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(estadoVO),estado.nome);
 			}
-			
-			ObjectMapper mapper = new ObjectMapper();  
 			createJSON(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(estadoVOs));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		
 	}
-	
 	
 	public static List<Cidade> getCidadesEstado(String estado, int pagina){
 		List<Cidade> cidades = new ArrayList<>();
@@ -215,6 +206,25 @@ public class Bolsa {
 		    System.out.printf("File is located at %s%n", file.getAbsolutePath());
 	}
 	
+	public static void createJSON(String json, String name){
+		
+	 	File file = new File(name + ".json");
+	 	
+	 	if (file.exists()) {
+	        file.delete();     
+	     }
+	 	
+	    FileWriter writer = null;
+	    try {
+	        writer = new FileWriter(file);
+	        writer.write(json);
+	    } catch (IOException e) {
+	        e.printStackTrace(); // I'd rather declare method with throws IOException and omit this catch.
+	    } finally {
+	        if (writer != null) try { writer.close(); } catch (IOException ignore) {}
+	    }
+	    System.out.printf("File is located at %s%n", file.getAbsolutePath());
+}
 	public static void createJSON(String json){
 		
 	 	File file = new File("bolsa_familia.json");
