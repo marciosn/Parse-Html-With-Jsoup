@@ -11,13 +11,12 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
-import com.google.gson.Gson;
-
 public class Bolsa {
 	
 	public static void main(String[] args) {		
 		try {
 			
+			//getPessoasCidade("ceara", "quixada", 499, 3000);
 			getJSONBolsaFamilia();
 			
 		} catch (Exception e) {
@@ -49,10 +48,16 @@ public class Bolsa {
 		List<Cidade> cidades = new ArrayList<>();
 		Cidade cidade = null;
 		Document doc;
+		int quantidadePaginas = 0;
 		try {
+			String urlToGetUl = "http://bolsa-familia.com/cidades/"+estado+"/1/1/1";
+			doc = Jsoup.connect(urlToGetUl).timeout(3000).get();
+			Element ul = doc.select("ul[class=pagination]").first();
+			quantidadePaginas = getPaginas(ul);
+			
 			for (int i = 1; i <= pagina; i++) {
 				String url = "http://bolsa-familia.com/cidades/"+estado+"/"+i+"/1/1";
-				System.out.println("loading... "+url);
+				//System.out.println("loading... "+url);
 				doc = Jsoup.connect(url).timeout(3000).get();
 				Element tableCidades = doc.select("table[class=table]").first();
 				List<Element> trCidade = tableCidades.select("tr");
@@ -65,10 +70,14 @@ public class Bolsa {
 					} else {
 						if ( rows.size() == 3) {
 							cidade = new Cidade();
+							/*System.out.println("$$$$ "+rows.get(0).select("a[href]").attr("href")
+									.substring(rows.get(0).select("a[href]").attr("href").lastIndexOf("/") + 1));*/
 							cidade.setNome(rows.get(0).text());
 							cidade.setPagamentos(rows.get(1).text());
 							cidade.setValor(rows.get(2).text()); 
 							cidade.setUrlCidade(rows.get(0).select("a[href]").attr("href"));
+							/*System.out.println(rows.get(0).select("a[href]").attr("href")
+									.substring(rows.get(0).select("a[href]").attr("href").lastIndexOf("/") + 1));*/
 							cidades.add(cidade);
 						}
 					}
@@ -81,7 +90,24 @@ public class Bolsa {
 		return cidades;
 	}
 	
-	public static void getPessoasCidade(String estado,String cidade, int pagina, int timeout){
+	public static int getPaginas(Element ul){
+		int pagina = 1;
+		if (ul != null) {
+			List<Element> lis = ul.select("li");
+			if (lis != null) {
+				if (lis.size() > 1) {
+					lis.remove(lis.size() - 1);
+					pagina = Integer.valueOf(lis.get(lis.size() - 1).text());
+					System.out.println(pagina);
+				} else {
+					return 1;
+				}
+			}
+		}
+		return pagina;
+	}
+	
+	public static void getPessoasCidade(String estado, String cidade, int pagina, int timeout){
 		List<Cidade> cidades = new ArrayList<>();
 		Document doc;
 		try {					
