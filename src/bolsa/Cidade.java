@@ -1,13 +1,13 @@
 package bolsa;
 
-public class CearaCidades {
+public class Cidade {
 	
 	private String nome;
 	private String urlCidade;
 	private String pagamentos;
 	private String valor;
 	
-	public CearaCidades(){
+	public Cidade(){
 		
 	}
 	
